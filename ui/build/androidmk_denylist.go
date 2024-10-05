@@ -28,7 +28,8 @@ var androidmk_denylist []string = []string{
 	"device/common/",
 	"device/google_car/",
 	"device/sample/",
-	"frameworks/",
+	// Add back frameworks/ once defensive Android.mk files are removed
+	//"frameworks/",
 	"hardware/libhardware/",
 	"hardware/libhardware_legacy/",
 	"hardware/ril/",
