@@ -114,7 +114,7 @@ my_module_type {
 }
 ```
 
-The syntax is `any @ my_variable_name: <expression using my_variable_name>`. `any` is currently the only pattern that can be bound to a variable, but we may add more in the future. `any` is equivalent to `default` except it will not match undefined variables.
+The syntax is `any @ my_variable_name: <expression using my_variable_name>`. `any` is currently the only pattern that can be bound to a variable, but we may add more in the future. `any` is equivalent to `default` except it will not match undefined select conditions.
 
 #### Errors
 
@@ -139,7 +139,7 @@ my_module_type {
 
 Currently, the way configurable properties work is that there is secretly another property struct that has the `target`, `arch`, etc. properties, and then when the arch mutator (or other relevant mutator) runs, it copies the values of these properties onto the regular property structs. There’s nothing stopping you from accessing your properties from a mutator that runs before the one that updates the properties based on configurable values. This is a potential source of bugs, and we want to make sure that select statements don’t have the same pitfall. For that reason, you have to read property’s values through a getter which can do this check. This requires changing the code on a property-by-property basis to support selects.
 
-To make a property support selects, it must be of type [proptools.Configurable[T]](https://cs.android.com/android/platform/superproject/main/+/main:build/blueprint/proptools/configurable.go;l=341;drc=a52b058cccd2caa778d0f97077adcd4ef7ffb68a). T is the old type of the property, currently we support bool, string, and []string. Configurable has a `Get(evaluator)` method to get the value of the property. The evaluator can be a ModuleContext, or if you’re in a situation where you only have a very limited context and a module, (such as in a singleton) you can use [ModuleBase.ConfigurableEvaluator](https://cs.android.com/android/platform/superproject/main/+/main:build/soong/android/module.go;l=2133;drc=e19f741052cce097da940d9083d3f29e668de5cb).
+To make a property support selects, it must be of type [proptools.Configurable[T]](https://cs.android.com/android/platform/superproject/main/+/main:build/blueprint/proptools/configurable.go;l=341;drc=a52b058cccd2caa778d0f97077adcd4ef7ffb68a). T is the old type of the property. Currently we support bool, string, and []string. Configurable has a `Get(evaluator)` method to get the value of the property. The evaluator can be a ModuleContext, or if you’re in a situation where you only have a very limited context and a module, (such as in a singleton) you can use [ModuleBase.ConfigurableEvaluator](https://cs.android.com/android/platform/superproject/main/+/main:build/soong/android/module.go;l=2133;drc=e19f741052cce097da940d9083d3f29e668de5cb).
 
 `proptools.Configurable[T]` will handle unset properties for you, so you don’t need to make it a pointer type. However, there is a not-widely-known feature of property structs, where normally, properties are appended when squashing defaults. But if the property was a pointer property, later defaults replace earlier values instead of appending. With selects, to maintain this behavior, add the `android:"replace_instead_of_append"` struct tag. The "append" behavior for boolean values is to boolean OR them together, which is rarely what you want, so most boolean properties are pointers today.
 
@@ -167,4 +167,4 @@ func (m *ModuleBase) Enabled(ctx ConfigAndErrorContext) *bool {
 
 The `android:"arch_variant"` tag is kept to support the old `target:` and `arch:` properties with this property, but if all their usages in bp files were replaced by selects, then that tag could be removed.
 
-The enabled property underwent this migration in aosp/3066188
+The enabled property underwent this migration in https://r.android.com/3066188
